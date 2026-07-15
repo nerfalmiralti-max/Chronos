@@ -9,7 +9,6 @@ export default defineConfig([
     '.next/**',
     '.codex/**',
     '.agents/**',
-    '.expo/**',
     'dist/**',
     'out/**',
     'coverage/**',
