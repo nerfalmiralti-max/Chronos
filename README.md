@@ -1,90 +1,43 @@
-# Chronos
+# KRONOS
 
-Chronos is a premium Expo/React Native time and goals app with email authentication, protected navigation, focus sessions, analytics, light/dark themes, and per-user Supabase security.
+KRONOS is a cinematic, public web experience that treats time as physical material. Days become nodes, weeks become structures, months become constellations, and completed work becomes light.
 
-## Stack
+## Technology
 
-- Expo SDK 57, React Native 0.86, Expo Router protected routes
-- TypeScript strict mode, React Hook Form, Zod
-- Supabase Auth, Postgres, RLS, Edge Functions
-- Reanimated, Gesture Handler, Skia, Haptics, Blur/Glass Effect
+- Next.js App Router and TypeScript
+- Tailwind CSS 4
+- Three.js, React Three Fiber, Drei, and Postprocessing
+- Custom GLSL atmosphere, particle, and filament shaders
+- GSAP for scroll direction, Lenis for desktop smoothing
+- Framer Motion for interface motion and Motion One for isolated completion signals
 
-## Local setup
+## Worlds
 
-1. Copy `.env.example` to `.env`.
-2. Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from **Supabase Dashboard > Project Settings > API**.
-3. Keep `EXPO_PUBLIC_APP_SCHEME=chronos`.
-4. Run `npm install`, then `npm run start` or `npm run web`.
+- `/` — Temporal Genesis
+- `/today` — Now Field
+- `/goals` — Long Arc
+- `/calendar` — Time Orbit
+- `/analytics` — Memory Field
+- `/timer` — Temporal Chamber
 
-No service-role or SMTP secret belongs in `.env` shipped with the app.
+Every route is public. Tasks, goal progress, and focus memory are stored only in the current browser profile. The project has no account system, backend requirement, identity record, or environment variables.
 
-## Supabase development project
-
-Use a separate development project, then run:
-
-```bash
-npx supabase login
-npx supabase link --project-ref YOUR_REAL_DEVELOPMENT_PROJECT_REF
-npx supabase db push
-npx supabase functions deploy delete-account
-```
-
-Do not run placeholder commands. The real development project ref is available in the Supabase dashboard URL and **Project Settings > General**.
-
-In **Authentication > URL Configuration**, add:
-
-```text
-chronos://auth/confirm
-chronos://auth/reset-password
-```
-
-Enable email confirmation in **Authentication > Providers > Email**. The app handles PKCE `code`, `token_hash`, confirmation, recovery, session refresh, sign-out, and account deletion.
-
-## Database and security
-
-`supabase/migrations/20260714010000_initial_chronos.sql` creates profiles, goals, tasks, focus sessions, indexes, profile/update triggers, and four explicit RLS policies per user table. Policies are restricted to `authenticated` and compare ownership with `(select auth.uid())` using `WITH CHECK` for writes.
-
-Run database tests after linking a development project:
+## Development
 
 ```bash
-npx supabase db reset
-npx supabase test db
+npm install
+npm run dev
 ```
-
-The delete-account Edge Function verifies the caller token, derives the user on the server, and uses `SUPABASE_SERVICE_ROLE_KEY` only in the function environment. It never accepts a client-supplied user ID.
-
-## Email templates
-
-Templates are in `supabase/templates/`:
-
-- `confirm-signup.html`
-- `reset-password.html`
-- `change-email.html`
-- `reauthentication.html`
-
-Paste them into the matching templates under **Authentication > Email Templates**. Keep `{{ .ConfirmationURL }}` and `{{ .Token }}` placeholders intact.
-
-For production, configure **Authentication > SMTP Settings** with credentials supplied by the owner:
-
-- sender email and sender name
-- SMTP host and port
-- username and password
-- minimum resend interval and rate limits
-
-Production SMTP is intentionally not claimed as configured until those external credentials are provided.
 
 ## Verification
 
 ```bash
-npx expo-doctor
 npm run typecheck
 npm run lint
 npm test
-npm run build:web
+npm run build
 ```
 
-End-to-end email delivery, real confirmation links, cross-user RLS, token refresh, rate limits, and account deletion require the linked development Supabase project and its two public client values. Never test these claims against production data.
+The experience provides a non-WebGL fallback, respects `prefers-reduced-motion` and Save-Data before loading the heavy scene, adapts quality to GPU performance, disables desktop-only smoothing on touch devices, and pauses rendering when the page is hidden.
 
-## Design
-
-The source of truth is `design-system/MASTER.md`. The UI uses one purple accent, three surface levels, a 4/8-point rhythm, system typography, 44-point touch targets, reduced-motion support, and a single visual focus per screen.
+The production build also exposes a standalone web manifest, maskable and Apple touch icons, plus a versioned offline shell service worker.
