@@ -27,7 +27,8 @@ export function usePublicMemory() {
   const recordFocus = useCallback((minutes: number) => {
     const current = loadMemory();
     const dailyMinutes = [...current.dailyMinutes];
-    dailyMinutes[dailyMinutes.length - 1] += Math.max(0, minutes);
+    const mondayFirstDay = (new Date().getDay() + 6) % 7;
+    dailyMinutes[mondayFirstDay] += Math.max(0, minutes);
     saveMemory({ ...current, dailyMinutes, sessionCount: current.sessionCount + 1 });
   }, []);
   return { memory, recordFocus };

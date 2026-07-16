@@ -3,11 +3,16 @@ export type WorldMode = 'home' | 'today' | 'goals' | 'calendar' | 'analytics' | 
 export type TemporalTask = {
   id: string;
   title: string;
+  date?: string;
   time: string;
   duration: number;
   orbit: number;
   completed: boolean;
 };
+
+export type TemporalTaskDetails = Partial<Pick<TemporalTask, 'date' | 'time' | 'duration'>>;
+
+export type TemporalTaskPatch = Partial<Pick<TemporalTask, 'title' | 'date' | 'time' | 'duration'>>;
 
 export type TemporalGoal = {
   id: string;

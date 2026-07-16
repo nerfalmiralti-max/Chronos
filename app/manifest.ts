@@ -4,8 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'KRONOS — Time, made physical',
     short_name: 'KRONOS',
-    description: 'A cinematic productivity world where time becomes living material.',
-    start_url: '/',
+    description: 'Plan your day, protect your focus, and see where your time goes.',
+    start_url: '/today',
     display: 'standalone',
     background_color: '#020306',
     theme_color: '#020306',

@@ -1,6 +1,6 @@
 /* global self, caches, Response */
 
-const CACHE = 'kronos-world-v3';
+const CACHE = 'kronos-world-v4';
 const SHELL_ROUTES = ['/', '/today', '/goals', '/calendar', '/analytics', '/timer'];
 const CORE_ASSETS = ['/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 

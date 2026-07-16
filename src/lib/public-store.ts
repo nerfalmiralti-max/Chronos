@@ -1,4 +1,10 @@
-import type { TemporalGoal, TemporalMemory, TemporalTask } from '@/types/kronos';
+import type {
+  TemporalGoal,
+  TemporalMemory,
+  TemporalTask,
+  TemporalTaskDetails,
+  TemporalTaskPatch,
+} from '@/types/kronos';
 
 const STORAGE_KEY = 'kronos.public-field.v2';
 const GOALS_KEY = 'kronos.public-goals.v1';
@@ -20,23 +26,69 @@ export const initialGoals: TemporalGoal[] = [
 ];
 
 export const initialMemory: TemporalMemory = {
-  dailyMinutes: [240, 180, 310, 420, 270, 360, 302],
-  sessionCount: 18,
-  resolvedCount: 18,
-  coherence: 87,
+  dailyMinutes: [0, 0, 0, 0, 0, 0, 0],
+  sessionCount: 0,
+  resolvedCount: 0,
+  coherence: 0,
 };
+
+const TIME_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+export function isValidTaskTitle(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length >= 2;
+}
+
+export function isValidTaskTime(value: unknown): value is string {
+  return typeof value === 'string' && TIME_PATTERN.test(value);
+}
+
+export function isValidTaskDuration(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 5 && value <= 480;
+}
+
+export function isValidTaskDate(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const match = DATE_PATTERN.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12) return false;
+  const leap = year % 400 === 0 || (year % 4 === 0 && year % 100 !== 0);
+  const daysInMonth = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day >= 1 && day <= daysInMonth[month - 1];
+}
+
+function isValidTaskDetails(details: TemporalTaskDetails) {
+  return (details.date === undefined || isValidTaskDate(details.date))
+    && (details.time === undefined || isValidTaskTime(details.time))
+    && (details.duration === undefined || isValidTaskDuration(details.duration));
+}
 
 export function normalizeTasks(value: unknown): TemporalTask[] {
   if (!Array.isArray(value)) return initialTasks;
-  return value.filter((item): item is TemporalTask => {
-    if (!item || typeof item !== 'object') return false;
+  return value.flatMap((item): TemporalTask[] => {
+    if (!item || typeof item !== 'object') return [];
     const task = item as Partial<TemporalTask>;
-    return typeof task.id === 'string'
-      && typeof task.title === 'string'
-      && typeof task.time === 'string'
-      && typeof task.duration === 'number'
-      && typeof task.orbit === 'number'
-      && typeof task.completed === 'boolean';
+    if (typeof task.id !== 'string'
+      || !isValidTaskTitle(task.title)
+      || !isValidTaskTime(task.time)
+      || !isValidTaskDuration(task.duration)
+      || typeof task.orbit !== 'number'
+      || !Number.isFinite(task.orbit)
+      || typeof task.completed !== 'boolean'
+      || (task.date !== undefined && !isValidTaskDate(task.date))) return [];
+    const normalized: TemporalTask = {
+      id: task.id,
+      title: task.title.trim(),
+      time: task.time,
+      duration: task.duration,
+      orbit: task.orbit,
+      completed: task.completed,
+    };
+    if (task.date !== undefined) normalized.date = task.date;
+    return [normalized];
   });
 }
 
@@ -188,13 +240,50 @@ export function recordResolvedObject() {
   saveMemory({ ...memory, resolvedCount: memory.resolvedCount + 1 });
 }
 
-export function makeTask(title: string): TemporalTask {
+export function applyTaskPatch(task: TemporalTask, patch: TemporalTaskPatch): TemporalTask | null {
+  if ((patch.title !== undefined && !isValidTaskTitle(patch.title)) || !isValidTaskDetails(patch)) return null;
+  return {
+    ...task,
+    title: patch.title === undefined ? task.title : patch.title.trim(),
+    time: patch.time ?? task.time,
+    duration: patch.duration ?? task.duration,
+    ...(patch.date === undefined ? {} : { date: patch.date }),
+  };
+}
+
+export function shiftTaskTime(time: string, minutes = 30): string | null {
+  if (!isValidTaskTime(time) || !Number.isFinite(minutes)) return null;
+  const [hours, currentMinutes] = time.split(':').map(Number);
+  const minutesInDay = 24 * 60;
+  const shifted = ((hours * 60 + currentMinutes + Math.round(minutes)) % minutesInDay + minutesInDay) % minutesInDay;
+  return `${Math.floor(shifted / 60).toString().padStart(2, '0')}:${(shifted % 60).toString().padStart(2, '0')}`;
+}
+
+export function shiftTaskSchedule(task: Pick<TemporalTask, 'date' | 'time'>, minutes = 30): Pick<TemporalTask, 'date' | 'time'> | null {
+  if (!isValidTaskTime(task.time) || !Number.isFinite(minutes) || (task.date !== undefined && !isValidTaskDate(task.date))) return null;
+  const [hours, currentMinutes] = task.time.split(':').map(Number);
+  const rawMinutes = hours * 60 + currentMinutes + Math.round(minutes);
+  const minutesInDay = 24 * 60;
+  const dayDelta = Math.floor(rawMinutes / minutesInDay);
+  const shiftedTime = shiftTaskTime(task.time, minutes);
+  if (!shiftedTime) return null;
+  if (!task.date || dayDelta === 0) return { ...(task.date ? { date: task.date } : {}), time: shiftedTime };
+  const [year, month, day] = task.date.split('-').map(Number);
+  const shiftedDate = new Date(Date.UTC(year, month - 1, day + dayDelta));
+  const date = `${shiftedDate.getUTCFullYear()}-${(shiftedDate.getUTCMonth() + 1).toString().padStart(2, '0')}-${shiftedDate.getUTCDate().toString().padStart(2, '0')}`;
+  return { date, time: shiftedTime };
+}
+
+export function makeTask(title: string, details: TemporalTaskDetails = {}): TemporalTask | null {
+  if (!isValidTaskTitle(title) || !isValidTaskDetails(details)) return null;
   const now = new Date();
+  const defaultTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   return {
     id: globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
     title: title.trim(),
-    time: new Intl.DateTimeFormat('en', { hour: '2-digit', minute: '2-digit', hour12: false }).format(now),
-    duration: 45,
+    ...(details.date === undefined ? {} : { date: details.date }),
+    time: details.time ?? defaultTime,
+    duration: details.duration ?? 45,
     orbit: 0.36 + Math.random() * 0.45,
     completed: false,
   };

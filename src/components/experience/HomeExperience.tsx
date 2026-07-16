@@ -61,14 +61,14 @@ export function HomeExperience() {
             {['DAYS', 'WEEKS', 'MONTHS', 'YEARS'].map((label, index) => <span key={label} data-epoch style={{ '--epoch': index } as CSSProperties}>{label}</span>)}
           </div>
           <div className="hero-copy intro-materialize" data-hero-copy>
-            <p className="eyebrow">A SPATIAL OPERATING SYSTEM FOR TIME</p>
-            <h1 id="hero-title">TIME IS NOT SPENT.<br /><em>TIME IS DESIGNED.</em></h1>
+            <p className="eyebrow">SEE WHERE YOUR TIME GOES</p>
+            <h1 id="hero-title">PLAN YOUR DAY.<br /><em>PROTECT YOUR FOCUS.</em></h1>
             <div className="hero-footer">
-              <p>Move beyond schedules. Shape days, focus, and ambition as one continuous living material.</p>
-              <Link className="text-link" href="/today" data-cursor="Enter">Enter the timeline <ArrowDownRight size={18} /></Link>
+              <p>Turn tasks into a visual plan, focus on what matters now, and understand how your day is used.</p>
+              <Link className="text-link" href="/today" data-cursor="Today">Open Today <ArrowDownRight size={18} /></Link>
             </div>
           </div>
-          <div className="scroll-cue" aria-hidden="true"><span>Travel through time</span><i /></div>
+          <div className="scroll-cue" aria-hidden="true"><span>See how it works</span><i /></div>
         </div>
       </section>
 

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     default: 'KRONOS — Time, made physical',
     template: '%s — KRONOS',
   },
-  description: 'A cinematic productivity world where days, tasks, focus, and memory become living material.',
+  description: 'Plan your day, focus on what matters, and see where your time goes with KRONOS.',
   applicationName: 'KRONOS',
   category: 'productivity',
   manifest: '/manifest.webmanifest',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     title: 'KRONOS — Time, made physical',
-    description: 'Time is not spent. Time is designed.',
+    description: 'Plan your day. Protect your focus. See where your time goes.',
     type: 'website',
   },
 };

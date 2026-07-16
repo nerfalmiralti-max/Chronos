@@ -2,42 +2,55 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { BarChart3, CalendarDays, Sun, Target, Timer } from 'lucide-react';
 
 const worlds = [
-  { href: '/today', label: 'Now' },
-  { href: '/goals', label: 'Arc' },
-  { href: '/calendar', label: 'Orbit' },
-  { href: '/analytics', label: 'Memory' },
-  { href: '/timer', label: 'Focus' },
+  { href: '/today', label: 'Today', Icon: Sun },
+  { href: '/goals', label: 'Goals', Icon: Target },
+  { href: '/calendar', label: 'Plan', Icon: CalendarDays },
+  { href: '/analytics', label: 'Analytics', Icon: BarChart3 },
+  { href: '/timer', label: 'Focus', Icon: Timer },
 ];
 
-export function WorldNav({ home = false }: { home?: boolean }) {
+type WorldNavProps = {
+  home?: boolean;
+  focus?: boolean;
+};
+
+export function WorldNav({ home = false, focus = false }: WorldNavProps) {
   const pathname = usePathname();
+  const destination = home || focus ? '/today' : '/';
+  const destinationLabel = focus ? 'Back to Today' : home ? 'Open Today' : 'Overview';
+  const destinationCursor = focus ? 'Back' : home ? 'Today' : 'Overview';
+
   return (
     <header className="world-nav-wrap">
-      <nav className="world-nav" aria-label="Primary navigation">
-        <Link className="wordmark" href="/" data-cursor="Origin" aria-label="KRONOS home">
+      <nav className={`world-nav${focus ? ' world-nav-focus' : ''}`} aria-label={focus ? 'Focus navigation' : 'Primary navigation'}>
+        <Link className="wordmark" href="/" data-cursor="Home" aria-label="KRONOS home">
           <span className="wordmark-mark" aria-hidden="true" />
           <span className="wordmark-label">KRONOS</span>
         </Link>
-        {home ? (
+        {focus ? (
+          null
+        ) : home ? (
           <div className="chapter-nav" aria-label="Experience chapters">
-            <a href="#scale" data-cursor="Scale">Scale</a>
-            <a href="#matter" data-cursor="Matter">Matter</a>
+            <a href="#scale" data-cursor="How it works">How it works</a>
+            <a href="#matter" data-cursor="Tasks">Tasks</a>
             <a href="#focus" data-cursor="Focus">Focus</a>
           </div>
         ) : (
           <div className="chapter-nav product-links">
-            {worlds.map((world) => (
-              <Link key={world.href} href={world.href} aria-current={pathname === world.href ? 'page' : undefined} data-cursor={world.label}>
-                {world.label}
+            {worlds.map(({ href, label, Icon }) => (
+              <Link className="product-link" key={href} href={href} aria-current={pathname === href ? 'page' : undefined} data-cursor={label}>
+                <Icon size={14} strokeWidth={1.6} aria-hidden="true" />
+                <span>{label}</span>
               </Link>
             ))}
           </div>
         )}
-        <Link className="nav-entry" href={home ? '/today' : '/'} data-cursor={home ? 'Enter' : 'Return'}>
-          <span className="nav-entry-label">{home ? 'Enter the field' : 'Genesis'}</span>
-          <span aria-hidden="true">↗</span>
+        <Link className={`nav-entry${home ? '' : ' nav-entry-secondary'}`} href={destination} data-cursor={destinationCursor}>
+          <span className="nav-entry-label">{destinationLabel}</span>
+          <span aria-hidden="true">{focus ? '←' : '↗'}</span>
         </Link>
       </nav>
     </header>
